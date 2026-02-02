@@ -14,7 +14,7 @@ export const Landing = () => {
                             alt="Chessboard"
                             className="w-120 h-120 rounded-3xl shadow-2xl object-cover"
                         />
-                    </div>e
+                    </div>
                 </div>
 
                 {/* Content Section */}
