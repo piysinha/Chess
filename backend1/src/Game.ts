@@ -18,13 +18,15 @@ export class Game {
         this.player1.send(JSON.stringify({
             type: INIT_GAME,
             payload: {
-                color: 'white'
+                color: 'white',
+                playerNumber: 1
             }
         }));
         this.player2.send(JSON.stringify({
             type: INIT_GAME,
             payload: {
-                color: 'black'
+                color: 'black',
+                playerNumber: 2
             }
         }));
     }
@@ -58,20 +60,13 @@ export class Game {
             return;
         }
 
-        this.player1.send(JSON.stringify({
-            type: MOVE,
-            payload: {
-                move: move,
-                board: this.board.fen()
-            }
-        }));
-        this.player2.send(JSON.stringify({
-            type: MOVE,
-            payload: {
-                move: move,
-                board: this.board.fen()
-            }
-        }));
+        const payload = {
+            from: move.from,
+            to: move.to,
+            board: this.board.fen()
+        };
+        this.player1.send(JSON.stringify({ type: MOVE, payload }));
+        this.player2.send(JSON.stringify({ type: MOVE, payload }));
 
         if (this.board.isGameOver()) {
             // Handle game over

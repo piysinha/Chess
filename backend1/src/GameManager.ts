@@ -41,15 +41,14 @@ export class GameManager {
             }
 
             if (message.type === MOVE) {
-                // Handle move
-                    console.log("MOVE message received:", JSON.stringify(message));
-
-                const game = this.games.find(games => games.player1 === socket || games.player2 === socket);
+                console.log("📍 MOVE message received:", JSON.stringify(message.payload));
+                const game = this.games.find(g => g.player1 === socket || g.player2 === socket);
                 if (game) {
-                    console.log("Found game, making move with payload:", message.payload);
+                    console.log(`✅ Game found - Making move: ${message.payload.from} to ${message.payload.to}`);
                     game.makeMove(socket, message.payload);
-                }else {
-                    console.log("No game found for player.");
+                    console.log("🎯 Move executed successfully");
+                } else {
+                    console.error("❌ No game found for this player");
                 }
             }
         })

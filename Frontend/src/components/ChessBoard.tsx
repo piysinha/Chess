@@ -11,6 +11,7 @@ interface ChessBoardProps {
     } | null)[][];
     socket: WebSocket;
     gameBoard: Chess;
+    size?: number; // px
 }
 
 const getPieceSymbol = (piece: { type: PieceSymbol; color: Color } | null): string => {
@@ -26,7 +27,7 @@ const getPieceSymbol = (piece: { type: PieceSymbol; color: Color } | null): stri
     return symbols[piece.type][piece.color];
 };
 
-export const ChessBoard = ({ board, socket, gameBoard }: ChessBoardProps) => {
+export const ChessBoard = ({ board, socket, gameBoard, size = 500 }: ChessBoardProps) => {
     const [from, setFrom] = useState<Square | null>(null);
     const [validMoves, setValidMoves] = useState<Square[]>([]);
 
@@ -36,22 +37,17 @@ export const ChessBoard = ({ board, socket, gameBoard }: ChessBoardProps) => {
     };
 
     const handleSquareClick = (square: Square) => {
-        // If a piece is already selected
         if (from) {
-            // Check if this is a valid move destination
             if (validMoves.includes(square)) {
-                // Send the move to backend
                 socket.send(
                     JSON.stringify({
                         type: MOVE,
                         payload: { from, to: square },
                     })
                 );
-                console.log(`Move sent to backend: ${from} to ${square}`);
                 setFrom(null);
                 setValidMoves([]);
             } else {
-                // Try to select a different piece
                 const piece = gameBoard.get(square);
                 if (piece && piece.color === gameBoard.turn()) {
                     setFrom(square);
@@ -62,7 +58,6 @@ export const ChessBoard = ({ board, socket, gameBoard }: ChessBoardProps) => {
                 }
             }
         } else {
-            // Select a piece
             const piece = gameBoard.get(square);
             if (piece && piece.color === gameBoard.turn()) {
                 setFrom(square);
@@ -71,10 +66,18 @@ export const ChessBoard = ({ board, socket, gameBoard }: ChessBoardProps) => {
         }
     };
 
+    // Responsive measurements
+    const boardSize = Math.max(200, size); // ensure a minimum
+    const cellSize = Math.floor(boardSize / 8);
+    const pieceFontSize = Math.floor(cellSize * 0.6);
+
     return (
-        <div className="flex flex-col items-center justify-center gap-4 w-full h-full">
+        <div className="flex flex-col items-center justify-center gap-4">
             <div className="bg-gray-900 p-4 rounded-lg shadow-2xl">
-                <div className="grid grid-cols-8 gap-0 w-[500px] h-[500px] border-4 border-gray-700">
+                <div
+                    className="grid grid-cols-8 gap-0 border-4 border-gray-700"
+                    style={{ width: boardSize, height: boardSize }}
+                >
                     {board.map((row, rowIndex) =>
                         row.map((piece, colIndex) => {
                             const square = (String.fromCharCode(97 + colIndex) +
@@ -90,35 +93,37 @@ export const ChessBoard = ({ board, socket, gameBoard }: ChessBoardProps) => {
                                 <div
                                     onClick={() => handleSquareClick(square)}
                                     key={`${rowIndex}-${colIndex}`}
-                                    className={`w-16 h-16 flex items-center justify-center text-5xl font-bold relative cursor-pointer transition ${
-                                        isDark ? "bg-green-600" : "bg-amber-100"
-                                    } ${isSelected ? "ring-4 ring-yellow-400 ring-inset" : ""} ${
-                                        isValidMove ? "ring-4 ring-blue-400 ring-inset" : ""
-                                    }`}
+                                    className={`flex items-center justify-center font-bold relative cursor-pointer transition`}
+                                    style={{
+                                        width: cellSize,
+                                        height: cellSize,
+                                        backgroundColor: isDark ? "#166534" : "#FEF3C7",
+                                        boxSizing: "border-box",
+                                        ...(isSelected
+                                            ? { outline: "4px solid #FBBF24", outlineOffset: "-4px" }
+                                            : {}),
+                                        ...(isValidMove ? { boxShadow: "inset 0 0 0 4px rgba(59,130,246,0.35)" } : {}),
+                                    }}
                                 >
-                                    {/* File labels (a-h) */}
                                     {isFileLabel && (
                                         <span className="absolute bottom-0.5 right-1 text-xs font-bold text-gray-700">
                                             {String.fromCharCode(97 + colIndex)}
                                         </span>
                                     )}
-                                    {/* Rank labels (1-8) */}
                                     {isRankLabel && (
                                         <span className="absolute top-0.5 left-1 text-xs font-bold text-gray-700">
                                             {8 - rowIndex}
                                         </span>
                                     )}
-                                    {/* Valid move indicator */}
                                     {isValidMove && !isFromSquare && (
-                                        <div className="absolute w-4 h-4 bg-blue-400 rounded-full"></div>
+                                        <div className="absolute rounded-full" style={{ width: cellSize * 0.25, height: cellSize * 0.25, backgroundColor: "#60A5FA" }}></div>
                                     )}
-                                    {/* Piece */}
                                     <span
-                                        className={`${
-                                            piece?.color === "w"
-                                                ? "text-white drop-shadow-lg"
-                                                : "text-gray-700"
-                                        }`}
+                                        style={{
+                                            fontSize: pieceFontSize,
+                                            color: piece?.color === "w" ? "#ffffff" : "#374151",
+                                            filter: piece?.color === "w" ? "drop-shadow(0 2px 2px rgba(0,0,0,0.6))" : undefined,
+                                        }}
                                     >
                                         {getPieceSymbol(piece)}
                                     </span>
